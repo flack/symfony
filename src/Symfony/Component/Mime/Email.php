@@ -471,7 +471,7 @@ class Email extends Message
         }
 
         $attachmentParts = $inlineParts = [];
-        foreach ($this->attachments as $attachment) {
+        foreach ($this->attachments as $i => $attachment) {
             foreach ($names as $name) {
                 if (isset($attachment['part'])) {
                     continue;
@@ -479,13 +479,11 @@ class Email extends Message
                 if ($name !== $attachment['name']) {
                     continue;
                 }
-                if (isset($inlineParts[$name])) {
-                    continue 2;
-                }
                 $attachment['inline'] = true;
-                $inlineParts[$name] = $part = $this->createDataPart($attachment);
+                $inlineParts[] = $part = $this->createDataPart($attachment);
                 $html = str_replace('cid:'.$name, 'cid:'.$part->getContentId(), $html);
                 $part->setName($part->getContentId());
+                unset($names[$i]);
                 continue 2;
             }
             $attachmentParts[] = $this->createDataPart($attachment);
@@ -494,7 +492,7 @@ class Email extends Message
             $htmlPart = new TextPart($html, $this->htmlCharset, 'html');
         }
 
-        return [$htmlPart, $attachmentParts, array_values($inlineParts)];
+        return [$htmlPart, $attachmentParts, $inlineParts];
     }
 
     private function createDataPart(array $attachment): DataPart
